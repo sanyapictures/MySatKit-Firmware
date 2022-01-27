@@ -30,7 +30,8 @@
 //Adafruit_INA219 ina219;
 #include "INA219.h"
 #include "log.h"
-#include <analogWrite.h>
+#include "ADS.h"
+//#include <analogWrite.h>
 
 float temperature;
 float humidity;
@@ -51,12 +52,12 @@ float power = 0;
 String sTime;
 float aX, aY, aZ, aSqrt, gX, gY, gZ, mDirection, mX, mY, mZ;
 #define SEALEVELPRESSURE_HPA (1013.25)
-int ph1,ph2,ph3,ph4;
+float ph1,ph2,ph3,ph4;
 // Replace with your network credentials
 //const char* ssid = "LUNAR_WIFI";
 //const char* password = "ElonMars2024?";
-const char* ssid = "Tenda_C000C0";
-const char* password = "12345678";
+const char* ssid = "MRN";
+const char* password = "20111972";
 
 // Photo File Name to save in SPIFFS
 //https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/
@@ -88,6 +89,7 @@ String processor(const String& var)
   getSensorReadings(temperature, humidity, pressure);
   Log::printDateTimeS(rtcGetTime());
   Log::printValuesBME(getBME280());
+  Log::printValuesADS(getADS1015());
   Log::printValuesMPU9250(getMPU9250());
   Log::printValuesINA219(getINA219());
   Serial.println(var);
@@ -194,14 +196,15 @@ void takePhoto()
     isPhotoNeeded = false;
   }
 }
-
+/*
 void switchStar()
 {
     if(!isLedLight)
-    analogWrite(STAR_GIPIO, 0);
+    //analogWrite(STAR_GIPIO, 0);
   else
-    analogWrite(STAR_GIPIO, 255);
-}
+    //analogWrite(STAR_GIPIO, 255);
+    Serial.println("else");
+}*/
 
 void setup() 
 {
@@ -220,6 +223,7 @@ void setup()
   initCamera();
   initServer();
   initBME();
+  initADS();
   initMPU9250();
   initINA219();
   initRTC();
@@ -228,9 +232,10 @@ void setup()
 
 void loop() 
 {
-  switchStar();
+  //switchStar();
   takePhoto();
   getSensorReadings(temperature, humidity, pressure);
+  getLightSensorReadings(ph1,ph2,ph3,ph4);
   sendEvents();// Send Events to the Web Server with the Sensor Readings
   
   Serial.println("");
@@ -241,6 +246,7 @@ void loop()
   rtcGetTemperature().Print(Serial);
   Serial.println("C");
   Log::printValuesBME(getBME280());
+  Log::printValuesADS(getADS1015());
   Log::printValuesMPU9250(getMPU9250());
   Log::printValuesINA219(getINA219());
   Log::printWiFiInfo();
